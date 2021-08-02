@@ -10,22 +10,23 @@ namespace WebApplication1.Controller
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-        private abTestdbContext _abTestdbContext;
         private IUsersManagerService _usersManager;
 
+        //Get users List
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
-            return Ok(await Task.Run(() => _usersManager.GetUsers(_abTestdbContext)));
+            return Ok(await _usersManager.GetUsers());
         }
 
+        //Save users changes
         [Route("SaveEdits")]
         [HttpPost]
         public async Task<IActionResult> SaveUsers(IEnumerable<User> users)
         {
             if (ModelState.IsValid)
             {
-                return Ok(await Task.Run(() => _usersManager.SaveEdits(_abTestdbContext, users)));
+                return Ok(await _usersManager.SaveEdits(users));
             }
             else
             {
@@ -33,24 +34,25 @@ namespace WebApplication1.Controller
             }
         }
 
+        //get RollingRetation
         [Route("GetMetrics")]
         [HttpGet]
         public async Task<IActionResult> GetMetrics()
         {
-            return Ok(await Task.Run(() => _usersManager.GetMetrics(_abTestdbContext)));
+            return Ok(await _usersManager.GetMetrics());
         }
 
+        //Get users lifecycle
         [Route("GetLifeCycle")]
         [HttpGet]
         public async Task<IActionResult> GetLifeCycle()
         {
-            return Ok(await Task.Run(() => _usersManager.GetLifeCycle(_abTestdbContext)));
+            return Ok(await _usersManager.GetLifeCycle());
         }
 
         public UsersController(IUsersManagerService usersManager, abTestdbContext dbContext)
         {
             this._usersManager = usersManager;
-            this._abTestdbContext = dbContext;
         }
     }
 }

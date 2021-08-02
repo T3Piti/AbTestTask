@@ -1,22 +1,26 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using WebApplication1.Context;
 
 namespace WebApplication1.Service
 {
     public class UsersManagerService : IUsersManagerService
     {
-        public double GetMetrics(abTestdbContext db)
+        private abTestdbContext _dbContext;
+
+        public async Task <double> GetMetrics()
         {
             List<User> users = new List<User>();
-            using (db)
+            using (_dbContext)
             {
-                users = db.Users.ToList();
+                users =await _dbContext.Users.ToListAsync();
             }
-            return CalculateMatrics(users);
+            var metricsResult = await Task.Run(()=> CalculateMatrics(users));
+            return metricsResult;
         }
-
         private double CalculateMatrics(List<User> users)
         {
             int days = 7;
@@ -41,6 +45,7 @@ namespace WebApplication1.Service
             if (registrateUsers != 0)
             {
                 double result = ((double)returnLater / (double)registrateUsers) * multiplier;
+                result = Math.Round(result, 2);
                 return result;
             }
             else
@@ -48,47 +53,44 @@ namespace WebApplication1.Service
                 return 0;
             }
         }
-
-        public IEnumerable<User> GetUsers(abTestdbContext db)
+        public async Task<IEnumerable<User>> GetUsers()
         {
             List<User> users = new List<User>();
             try
             {
-                using (db)
+                using (_dbContext)
                 {
-                    users = db.Users.ToList();
+                    users = await _dbContext.Users.ToListAsync();
                 }
                 return users;
             }
-            catch
+            catch(Exception ex)
             {
-                throw new NotImplementedException();
+                throw new Exception(ex.Message);
             }
         }
-
-        public IEnumerable<User> SaveEdits(abTestdbContext db, IEnumerable<User> users)
+        public async Task<IEnumerable<User>> SaveEdits(IEnumerable<User> users)
         {
             try
             {
-                using (db)
+                using (_dbContext)
                 {
-                    db.Users.UpdateRange(users);
-                    db.SaveChanges();
+                    _dbContext.Users.UpdateRange(users);
+                    await _dbContext.SaveChangesAsync();
                 }
                 return users;
             }
-            catch
+            catch(Exception ex)
             {
-                throw new NotImplementedException();
+                throw new Exception(ex.Message);
             }
         }
-
-        public Dictionary<string, int> GetLifeCycle(abTestdbContext db)
+        public async Task<Dictionary<string, int>> GetLifeCycle()
         {
             var lifeCycle = new Dictionary<string, int>();
-            using (db)
+            using (_dbContext)
             {
-                var users = db.Users.ToList();
+                var users = await _dbContext.Users.ToListAsync();
                 string dictinoraryKey = "";
                 foreach (var user in users)
                 {
@@ -105,6 +107,10 @@ namespace WebApplication1.Service
                 }
             }
             return lifeCycle;
+        }
+        public UsersManagerService(abTestdbContext dbContext)
+        {
+            this._dbContext = dbContext;
         }
     }
 }
